@@ -7,6 +7,9 @@ import { Button } from "../../components/Button/Button";
 import { Card } from "../../components/Card/Card";
 import { useDispatch, useSelector } from "react-redux";
 import { removeErrors, updateErrors } from "../../store/slices";
+import { Epiphany } from "../SuperPowers/EpiphanyIcon";
+import { Alohomora } from "../SuperPowers/AlohomoraIcon";
+import { ToolTips } from "../ToolTips/ToolTips";
 
 // Игра закончилась
 const STATUS_LOST = "STATUS_LOST";
@@ -15,6 +18,8 @@ const STATUS_WON = "STATUS_WON";
 const STATUS_IN_PROGRESS = "STATUS_IN_PROGRESS";
 // Начало игры: игрок видит все карты в течении нескольких секунд
 const STATUS_PREVIEW = "STATUS_PREVIEW";
+//Пауза = при Прозрении
+const STATUS_PAUSED = "STATUS_PAUSED";
 
 function getTimerValue(startDate, endDate) {
   if (!startDate && !endDate) {
@@ -53,6 +58,30 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
   const errors = useSelector(state => state.game.errors);
   // Статус режима игры до трех ошибок
   const isActiveEasyMode = useSelector(state => state.game.isActiveEasyMode);
+
+  //Возможно ли использование СуперСил
+
+  const [isEpiphanyAvailable, setIsEpiphanyAvailable] = useState(true);
+  const [isAlohomoraAvailable, setIsAlohomoraAvailable] = useState(true);
+
+  const [isEpiphanyMouseEnter, setIsEpiphanyMouseEnter] = useState(false);
+  const [isAlohomoraMouseEnter, setIsAlohomoraMouseEnter] = useState(false);
+
+  const onEpiphanyMouseEnter = ({ setIsEpiphanyMouseEnter }) => {
+    setIsEpiphanyMouseEnter(true);
+  };
+
+  const onEpiphanyMouseLeave = ({ setIsEpiphanyMouseEnter }) => {
+    setIsEpiphanyMouseEnter(false);
+  };
+
+  const onAlohomoraMouseEnter = ({ setIsAlohomoraMouseEnter }) => {
+    setIsAlohomoraMouseEnter(true);
+  };
+
+  const onAlohomoraMouseLeave = ({ setIsAlohomoraMouseEnter }) => {
+    setIsAlohomoraMouseEnter(false);
+  };
 
   // Если допущено 3 ошибки, игра заканчивается
   useEffect(() => {
@@ -209,6 +238,51 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
     };
   }, [gameStartDate, gameEndDate]);
 
+  function onEpiphanyClick() {
+    const currentTime = timer;
+    setStatus(STATUS_PAUSED);
+    setIsEpiphanyAvailable(false);
+    const closedCards = cards.filter(card => !card.open);
+
+    cards.map(card => (card.open = true));
+
+    setTimeout(() => {
+      setCards(
+        cards.map(card => {
+          if (closedCards.includes(card)) {
+            return { ...card, open: false };
+          } else {
+            return card;
+          }
+        }),
+      );
+      setTimer(currentTime);
+      setStatus(STATUS_IN_PROGRESS);
+    }, 5000);
+  }
+
+  function onAlohomoraClick() {
+    setIsAlohomoraAvailable(false);
+    const closedCards = cards.filter(card => !card.open);
+    const firstRandomCard = closedCards[Math.round(Math.random() * (closedCards.length - 1) + 1)];
+    const secondRandomCard = closedCards.filter(
+      closedCard =>
+        closedCard.suit === firstRandomCard.suit &&
+        closedCard.rank === firstRandomCard.rank &&
+        firstRandomCard.id !== closedCard.id,
+    );
+    setCards(
+      cards.map(card => {
+        if (card === firstRandomCard || card === secondRandomCard[0]) {
+          return { ...card, open: true };
+        } else {
+          return card;
+        }
+      }),
+    );
+  }
+
+  const withoutSuperpowers = isEpiphanyAvailable && isAlohomoraAvailable;
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -232,6 +306,56 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
             </>
           )}
         </div>
+
+        {status === STATUS_IN_PROGRESS || status === STATUS_PAUSED ? (
+          <>
+            <div className={styles.superPowersContainer}>
+              <Epiphany
+                isAvailable={isEpiphanyAvailable}
+                onClick={onEpiphanyClick}
+                onMouseEnter={onEpiphanyMouseEnter}
+                onMouseLeave={onEpiphanyMouseLeave}
+                setIsEpiphanyMouseEnter={setIsEpiphanyMouseEnter}
+                isAlohomoraMouseEnter={isAlohomoraMouseEnter}
+                isAlohomoraAvailable={isAlohomoraAvailable}
+              />
+              <Alohomora
+                isAvailable={isAlohomoraAvailable}
+                onClick={onAlohomoraClick}
+                onMouseEnter={onAlohomoraMouseEnter}
+                onMouseLeave={onAlohomoraMouseLeave}
+                setIsAlohomoraMouseEnter={setIsAlohomoraMouseEnter}
+                isEpiphanyMouseEnter={isEpiphanyMouseEnter}
+                isEpiphanyAvailable={isEpiphanyAvailable}
+              />
+            </div>
+
+            {(isAlohomoraAvailable && isAlohomoraMouseEnter) || (isEpiphanyAvailable && isEpiphanyMouseEnter) ? (
+              <div className={styles.modalBackground}>
+                <div className={styles.modalWindow}>
+                  {isEpiphanyAvailable && isEpiphanyMouseEnter && (
+                    <div className={isAlohomoraAvailable ? styles.toolTipEpiphany : styles.toolTip}>
+                      <ToolTips
+                        title={"Прозрение"}
+                        text={
+                          "На 5 секунд показываются все карты. Таймер длительности игры на это время останавливается."
+                        }
+                        ч
+                      />
+                    </div>
+                  )}
+
+                  {isAlohomoraAvailable && isAlohomoraMouseEnter && (
+                    <div className={isEpiphanyAvailable ? styles.toolAlohomora : styles.toolTip}>
+                      <ToolTips title={"Алохомора"} text={"Открываптся случайная пара кард."} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : null}
+          </>
+        ) : null}
+
         {status === STATUS_IN_PROGRESS ? <Button onClick={resetGame}>Начать заново</Button> : null}
       </div>
 
@@ -254,6 +378,7 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
             gameDurationSeconds={timer.seconds}
             gameDurationMinutes={timer.minutes}
             onClick={resetGame}
+            withoutSuperpowers={withoutSuperpowers}
           />
         </div>
       ) : null}
