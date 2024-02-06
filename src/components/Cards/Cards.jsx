@@ -10,6 +10,7 @@ import { removeErrors, updateErrors } from "../../store/slices";
 import { Epiphany } from "../SuperPowers/EpiphanyIcon";
 import { Alohomora } from "../SuperPowers/AlohomoraIcon";
 import { ToolTips } from "../ToolTips/ToolTips";
+import { Timer } from "../Timer/Timer";
 
 // Игра закончилась
 const STATUS_LOST = "STATUS_LOST";
@@ -92,9 +93,9 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
   });
 
   // Дата начала игры
-  const [gameStartDate, setGameStartDate] = useState(null);
+  // const [gameStartDate, setGameStartDate] = useState(null);
   // Дата конца игры
-  const [gameEndDate, setGameEndDate] = useState(null);
+  // const [gameEndDate, setGameEndDate] = useState(null);
 
   // Стейт для таймера, высчитывается в setInteval на основе gameStartDate и gameEndDate
   const [timer, setTimer] = useState({
@@ -107,17 +108,21 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
     setStatus(status);
   }
   function startGame() {
+    // setGameEndDate(null);
+    // setGameStartDate(startDate);
     const startDate = new Date();
     setTimer(getTimerValue(startDate, null));
     setStatus(STATUS_IN_PROGRESS);
-    setGameEndDate(null);
-    setGameStartDate(startDate);
+    setIsEpiphanyAvailable(true);
+    setIsEpiphanyMouseEnter(false);
+    setIsAlohomoraAvailable(true);
+    setIsAlohomoraMouseEnter(false);
   }
   function resetGame() {
     setTimer(getTimerValue(null, null));
     setStatus(STATUS_PREVIEW);
-    setGameStartDate(null);
-    setGameEndDate(null);
+    // setGameStartDate(null);
+    // setGameEndDate(null);
   }
 
   /**
@@ -229,14 +234,14 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
   }, [status, pairsCount, previewSeconds]);
 
   // Обновляем значение таймера в интервале
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      setTimer(getTimerValue(gameStartDate, gameEndDate));
-    }, 300);
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [gameStartDate, gameEndDate]);
+  // useEffect(() => {
+  //   const intervalId = setInterval(() => {
+  //     setTimer(getTimerValue(gameStartDate, gameEndDate));
+  //   }, 300);
+  //   return () => {
+  //     clearInterval(intervalId);А
+  //   };
+  // }, [gameStartDate, gameEndDate]);
 
   function onEpiphanyClick() {
     const currentTime = timer;
@@ -286,7 +291,7 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <div className={styles.timer}>
+        {/* <div className={styles.timer}>
           {status === STATUS_PREVIEW ? (
             <div>
               <p className={styles.previewText}>Запоминайте пары!</p>
@@ -305,8 +310,17 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
               </div>
             </>
           )}
-        </div>
-
+        </div> */}
+        <Timer
+          status={status}
+          STATUS_PREVIEW={STATUS_PREVIEW}
+          previewSeconds={previewSeconds}
+          timer={timer}
+          STATUS_PAUSED={STATUS_PAUSED}
+          STATUS_LOST={STATUS_LOST}
+          STATUS_WON={STATUS_WON}
+          setTimer={setTimer}
+        />
         {status === STATUS_IN_PROGRESS || status === STATUS_PAUSED ? (
           <>
             <div className={styles.superPowersContainer}>
