@@ -59,6 +59,7 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
   const errors = useSelector(state => state.game.errors);
   // Статус режима игры до трех ошибок
   const isActiveEasyMode = useSelector(state => state.game.isActiveEasyMode);
+  const currentLevel = useSelector(state => state.game.currentLevel);
 
   //Возможно ли использование СуперСил
 
@@ -91,11 +92,6 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
       dispatch(removeErrors());
     }
   });
-
-  // Дата начала игры
-  // const [gameStartDate, setGameStartDate] = useState(null);
-  // Дата конца игры
-  // const [gameEndDate, setGameEndDate] = useState(null);
 
   // Стейт для таймера, высчитывается в setInteval на основе gameStartDate и gameEndDate
   const [timer, setTimer] = useState({
@@ -233,16 +229,6 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
     };
   }, [status, pairsCount, previewSeconds]);
 
-  // Обновляем значение таймера в интервале
-  // useEffect(() => {
-  //   const intervalId = setInterval(() => {
-  //     setTimer(getTimerValue(gameStartDate, gameEndDate));
-  //   }, 300);
-  //   return () => {
-  //     clearInterval(intervalId);А
-  //   };
-  // }, [gameStartDate, gameEndDate]);
-
   function onEpiphanyClick() {
     const currentTime = timer;
     setStatus(STATUS_PAUSED);
@@ -288,29 +274,27 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
   }
 
   const withoutSuperpowers = isEpiphanyAvailable && isAlohomoraAvailable;
+
+  //АЧИВКИ
+
+  const setAchievements = () => {
+    const achievements = [];
+
+    if (isActiveEasyMode && currentLevel === 9) {
+      achievements.push(1);
+    }
+
+    if (withoutSuperpowers) {
+      achievements.push(2);
+    }
+
+    return achievements;
+  };
+
+  const achievements = setAchievements();
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        {/* <div className={styles.timer}>
-          {status === STATUS_PREVIEW ? (
-            <div>
-              <p className={styles.previewText}>Запоминайте пары!</p>
-              <p className={styles.previewDescription}>Игра начнется через {previewSeconds} секунд</p>
-            </div>
-          ) : (
-            <>
-              <div className={styles.timerValue}>
-                <div className={styles.timerDescription}>min</div>
-                <div>{timer.minutes.toString().padStart("2", "0")}</div>
-              </div>
-              .
-              <div className={styles.timerValue}>
-                <div className={styles.timerDescription}>sec</div>
-                <div>{timer.seconds.toString().padStart("2", "0")}</div>
-              </div>
-            </>
-          )}
-        </div> */}
         <Timer
           status={status}
           STATUS_PREVIEW={STATUS_PREVIEW}
@@ -393,6 +377,7 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
             gameDurationMinutes={timer.minutes}
             onClick={resetGame}
             withoutSuperpowers={withoutSuperpowers}
+            achievements={achievements}
           />
         </div>
       ) : null}

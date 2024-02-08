@@ -15,7 +15,7 @@ export function SelectLevelPage() {
 
   const handleButtonClick = () => {
     if (choosenLevel !== null) {
-      dispatch(setCurrentLevel({ choosenLevel }));
+      dispatch(setCurrentLevel({ currentLevel: choosenLevel }));
       navigate(`/game/${choosenLevel}`);
     }
   };

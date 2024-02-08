@@ -9,7 +9,7 @@ import { useRef, useState } from "react";
 import { addLeader } from "../../api";
 import { useSelector } from "react-redux";
 
-export function EndGameModal({ isWon, gameDurationSeconds, gameDurationMinutes, onClick }) {
+export function EndGameModal({ isWon, gameDurationSeconds, gameDurationMinutes, onClick, achievements }) {
   const [username, setUsername] = useState("Пользователь");
   const [isFinishedAddingToLeaderboard, setIsFinishedAddingToLeaderboard] = useState(false);
   const buttonRef = useRef();
@@ -31,10 +31,10 @@ export function EndGameModal({ isWon, gameDurationSeconds, gameDurationMinutes, 
     }
   }
 
-  function addToLeaderboard({ username, time }) {
+  function addToLeaderboard({ username, time, achievements }) {
     buttonRef.disabled = true;
 
-    addLeader({ username, time }).then(() => {
+    addLeader({ username, time, achievements }).then(() => {
       buttonRef.disabled = false;
       setIsFinishedAddingToLeaderboard(true);
       setUsername("");
@@ -60,7 +60,11 @@ export function EndGameModal({ isWon, gameDurationSeconds, gameDurationMinutes, 
             value={username}
             onChange={event => setUsername(event.target.value)}
           />
-          <button className={styles.addButton} ref={buttonRef} onClick={() => addToLeaderboard({ username, time })}>
+          <button
+            className={styles.addButton}
+            ref={buttonRef}
+            onClick={() => addToLeaderboard({ username, time, achievements })}
+          >
             Отправить
           </button>
         </>

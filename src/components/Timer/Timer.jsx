@@ -1,7 +1,16 @@
 import { useEffect } from "react";
 import styles from "./Timer.module.css";
 
-export function Timer(status, STATUS_PREVIEW, previewSeconds, timer, STATUS_PAUSED, STATUS_LOST, STATUS_WON, setTimer) {
+export function Timer({
+  status,
+  STATUS_PREVIEW,
+  previewSeconds,
+  timer,
+  STATUS_PAUSED,
+  STATUS_LOST,
+  STATUS_WON,
+  setTimer,
+}) {
   // Обновляем значение таймера в интервале
   useEffect(() => {
     if (status !== STATUS_PAUSED) {

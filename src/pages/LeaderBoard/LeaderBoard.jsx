@@ -21,6 +21,8 @@ export function LeaderBoard() {
     return [...leaders].sort((a, b) => a.time - b.time);
   }, [leaders]);
 
+  console.log(sortedLeaders);
+
   return (
     <div className={styles.container}>
       <div className={styles.content}>

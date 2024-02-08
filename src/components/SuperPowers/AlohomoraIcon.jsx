@@ -1,6 +1,6 @@
 import styles from "./Superpowers.module.css";
 
-export function Alohomora(
+export function Alohomora({
   isAvailable,
   onClick,
   onMouseEnter,
@@ -8,7 +8,7 @@ export function Alohomora(
   setIsAlohomoraMouseEnter,
   isEpiphanyMouseEnter,
   isEpiphanyAvailable,
-) {
+}) {
   return isAvailable ? (
     <div
       className={isEpiphanyMouseEnter && isEpiphanyAvailable ? styles.hidden : styles.icon}

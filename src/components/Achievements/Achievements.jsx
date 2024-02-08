@@ -21,7 +21,7 @@ export function Achievements(achievements) {
     }
   };
 
-  if (achievements.includes(1)) {
+  if (achievements.includes(2)) {
     return true;
   } else {
     return false;
