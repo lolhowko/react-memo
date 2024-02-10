@@ -19,13 +19,13 @@ export function Achievements(achievements) {
     if (!achievements) {
       return;
     }
-  };
 
-  if (achievements.includes(2)) {
-    return true;
-  } else {
-    return false;
-  }
+    if (achievements.includes(2)) {
+      return true;
+    } else {
+      return false;
+    }
+  };
 
   return (
     <div className={styles.container}>

@@ -39,6 +39,7 @@ export function LeaderBoard() {
               user={leader.name}
               time={leader.time}
               isTemplate={false}
+              achievements={leader.achievements}
             />
           );
         })}
