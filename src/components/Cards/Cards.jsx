@@ -7,6 +7,10 @@ import { Button } from "../../components/Button/Button";
 import { Card } from "../../components/Card/Card";
 import { useDispatch, useSelector } from "react-redux";
 import { removeErrors, updateErrors } from "../../store/slices";
+import { Epiphany } from "../SuperPowers/EpiphanyIcon";
+import { Alohomora } from "../SuperPowers/AlohomoraIcon";
+import { ToolTips } from "../ToolTips/ToolTips";
+import { Timer } from "../Timer/Timer";
 
 // Игра закончилась
 const STATUS_LOST = "STATUS_LOST";
@@ -15,6 +19,8 @@ const STATUS_WON = "STATUS_WON";
 const STATUS_IN_PROGRESS = "STATUS_IN_PROGRESS";
 // Начало игры: игрок видит все карты в течении нескольких секунд
 const STATUS_PREVIEW = "STATUS_PREVIEW";
+//Пауза = при Прозрении
+const STATUS_PAUSED = "STATUS_PAUSED";
 
 function getTimerValue(startDate, endDate) {
   if (!startDate && !endDate) {
@@ -53,6 +59,31 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
   const errors = useSelector(state => state.game.errors);
   // Статус режима игры до трех ошибок
   const isActiveEasyMode = useSelector(state => state.game.isActiveEasyMode);
+  const currentLevel = useSelector(state => state.game.currentLevel);
+
+  //Возможно ли использование СуперСил
+
+  const [isEpiphanyAvailable, setIsEpiphanyAvailable] = useState(true);
+  const [isAlohomoraAvailable, setIsAlohomoraAvailable] = useState(true);
+
+  const [isEpiphanyMouseEnter, setIsEpiphanyMouseEnter] = useState(false);
+  const [isAlohomoraMouseEnter, setIsAlohomoraMouseEnter] = useState(false);
+
+  const onEpiphanyMouseEnter = ({ setIsEpiphanyMouseEnter }) => {
+    setIsEpiphanyMouseEnter(true);
+  };
+
+  const onEpiphanyMouseLeave = ({ setIsEpiphanyMouseEnter }) => {
+    setIsEpiphanyMouseEnter(false);
+  };
+
+  const onAlohomoraMouseEnter = ({ setIsAlohomoraMouseEnter }) => {
+    setIsAlohomoraMouseEnter(true);
+  };
+
+  const onAlohomoraMouseLeave = ({ setIsAlohomoraMouseEnter }) => {
+    setIsAlohomoraMouseEnter(false);
+  };
 
   // Если допущено 3 ошибки, игра заканчивается
   useEffect(() => {
@@ -61,11 +92,6 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
       dispatch(removeErrors());
     }
   });
-
-  // Дата начала игры
-  const [gameStartDate, setGameStartDate] = useState(null);
-  // Дата конца игры
-  const [gameEndDate, setGameEndDate] = useState(null);
 
   // Стейт для таймера, высчитывается в setInteval на основе gameStartDate и gameEndDate
   const [timer, setTimer] = useState({
@@ -78,17 +104,21 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
     setStatus(status);
   }
   function startGame() {
+    // setGameEndDate(null);
+    // setGameStartDate(startDate);
     const startDate = new Date();
     setTimer(getTimerValue(startDate, null));
     setStatus(STATUS_IN_PROGRESS);
-    setGameEndDate(null);
-    setGameStartDate(startDate);
+    setIsEpiphanyAvailable(true);
+    setIsEpiphanyMouseEnter(false);
+    setIsAlohomoraAvailable(true);
+    setIsAlohomoraMouseEnter(false);
   }
   function resetGame() {
     setTimer(getTimerValue(null, null));
     setStatus(STATUS_PREVIEW);
-    setGameStartDate(null);
-    setGameEndDate(null);
+    // setGameStartDate(null);
+    // setGameEndDate(null);
   }
 
   /**
@@ -199,39 +229,131 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
     };
   }, [status, pairsCount, previewSeconds]);
 
-  // Обновляем значение таймера в интервале
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      setTimer(getTimerValue(gameStartDate, gameEndDate));
-    }, 300);
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [gameStartDate, gameEndDate]);
+  function onEpiphanyClick() {
+    const currentTime = timer;
+    setStatus(STATUS_PAUSED);
+    setIsEpiphanyAvailable(false);
+    const closedCards = cards.filter(card => !card.open);
 
+    cards.map(card => (card.open = true));
+
+    setTimeout(() => {
+      setCards(
+        cards.map(card => {
+          if (closedCards.includes(card)) {
+            return { ...card, open: false };
+          } else {
+            return card;
+          }
+        }),
+      );
+      setTimer(currentTime);
+      setStatus(STATUS_IN_PROGRESS);
+    }, 5000);
+  }
+
+  function onAlohomoraClick() {
+    setIsAlohomoraAvailable(false);
+    const closedCards = cards.filter(card => !card.open);
+    const firstRandomCard = closedCards[Math.round(Math.random() * (closedCards.length - 1) + 1)];
+    const secondRandomCard = closedCards.filter(
+      closedCard =>
+        closedCard.suit === firstRandomCard.suit &&
+        closedCard.rank === firstRandomCard.rank &&
+        firstRandomCard.id !== closedCard.id,
+    );
+    setCards(
+      cards.map(card => {
+        if (card === firstRandomCard || card === secondRandomCard[0]) {
+          return { ...card, open: true };
+        } else {
+          return card;
+        }
+      }),
+    );
+  }
+
+  const withoutSuperpowers = isEpiphanyAvailable && isAlohomoraAvailable;
+
+  //АЧИВКИ
+
+  const setAchievements = () => {
+    const achievements = [];
+
+    if (isActiveEasyMode && currentLevel === 9) {
+      achievements.push(1);
+    }
+
+    if (withoutSuperpowers) {
+      achievements.push(2);
+    }
+
+    return achievements;
+  };
+
+  const achievements = setAchievements();
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <div className={styles.timer}>
-          {status === STATUS_PREVIEW ? (
-            <div>
-              <p className={styles.previewText}>Запоминайте пары!</p>
-              <p className={styles.previewDescription}>Игра начнется через {previewSeconds} секунд</p>
+        <Timer
+          status={status}
+          STATUS_PREVIEW={STATUS_PREVIEW}
+          previewSeconds={previewSeconds}
+          timer={timer}
+          STATUS_PAUSED={STATUS_PAUSED}
+          STATUS_LOST={STATUS_LOST}
+          STATUS_WON={STATUS_WON}
+          setTimer={setTimer}
+        />
+        {status === STATUS_IN_PROGRESS || status === STATUS_PAUSED ? (
+          <>
+            <div className={styles.superPowersContainer}>
+              <Epiphany
+                isAvailable={isEpiphanyAvailable}
+                onClick={onEpiphanyClick}
+                onMouseEnter={onEpiphanyMouseEnter}
+                onMouseLeave={onEpiphanyMouseLeave}
+                setIsEpiphanyMouseEnter={setIsEpiphanyMouseEnter}
+                isAlohomoraMouseEnter={isAlohomoraMouseEnter}
+                isAlohomoraAvailable={isAlohomoraAvailable}
+              />
+              <Alohomora
+                isAvailable={isAlohomoraAvailable}
+                onClick={onAlohomoraClick}
+                onMouseEnter={onAlohomoraMouseEnter}
+                onMouseLeave={onAlohomoraMouseLeave}
+                setIsAlohomoraMouseEnter={setIsAlohomoraMouseEnter}
+                isEpiphanyMouseEnter={isEpiphanyMouseEnter}
+                isEpiphanyAvailable={isEpiphanyAvailable}
+              />
             </div>
-          ) : (
-            <>
-              <div className={styles.timerValue}>
-                <div className={styles.timerDescription}>min</div>
-                <div>{timer.minutes.toString().padStart("2", "0")}</div>
+
+            {(isAlohomoraAvailable && isAlohomoraMouseEnter) || (isEpiphanyAvailable && isEpiphanyMouseEnter) ? (
+              <div className={styles.modalBackground}>
+                <div className={styles.modalWindow}>
+                  {isEpiphanyAvailable && isEpiphanyMouseEnter && (
+                    <div className={isAlohomoraAvailable ? styles.toolTipEpiphany : styles.toolTip}>
+                      <ToolTips
+                        title={"Прозрение"}
+                        text={
+                          "На 5 секунд показываются все карты. Таймер длительности игры на это время останавливается."
+                        }
+                        ч
+                      />
+                    </div>
+                  )}
+
+                  {isAlohomoraAvailable && isAlohomoraMouseEnter && (
+                    <div className={isEpiphanyAvailable ? styles.toolAlohomora : styles.toolTip}>
+                      <ToolTips title={"Алохомора"} text={"Открываптся случайная пара кард."} />
+                    </div>
+                  )}
+                </div>
               </div>
-              .
-              <div className={styles.timerValue}>
-                <div className={styles.timerDescription}>sec</div>
-                <div>{timer.seconds.toString().padStart("2", "0")}</div>
-              </div>
-            </>
-          )}
-        </div>
+            ) : null}
+          </>
+        ) : null}
+
         {status === STATUS_IN_PROGRESS ? <Button onClick={resetGame}>Начать заново</Button> : null}
       </div>
 
@@ -254,6 +376,8 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
             gameDurationSeconds={timer.seconds}
             gameDurationMinutes={timer.minutes}
             onClick={resetGame}
+            withoutSuperpowers={withoutSuperpowers}
+            achievements={achievements}
           />
         </div>
       ) : null}
