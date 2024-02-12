@@ -1,5 +1,5 @@
-import { HardModeAchievement } from "./Icons/HardModeAchievement";
-import { WithoutSuperpowerAchievement } from "./Icons/WithoutSuperpowerAchievement";
+import { HardModeAchievement } from "./icons/HardModeAchievement";
+import { WithoutSuperpowerAchievement } from "./icons/WithoutSuperpowerAchievement";
 import styles from "./Achievements.module.css";
 
 export function Achievements(achievements) {
